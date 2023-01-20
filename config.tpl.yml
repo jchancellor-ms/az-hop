@@ -36,7 +36,7 @@ mounts:
 #    export: myexport1 # Specify an existing NFS export name
 #    options: my_options # Specify the mount options.
 
-# name of the admin account
+# name of the admin account for the deployment
 admin_user: hpcadmin
 # Object ID to grant key vault read access
 key_vault_readers: #<object_id>
@@ -138,8 +138,23 @@ jumpbox:
   # SSH port under which the jumpbox SSH server listens on the public IP. Default to 22
   # Change this to, e.g., 2222, if security policies (like "zero trust") in your tenant automatically block access to port 22 from the internet
   #ssh_port: 2222
-# Active directory VM configuration
+# Active directory configuration
+# If existing_ad is set to true then the networking must use an existing vnet that has connectivity to the Active Directory Domain Services 
+# For ANF it is recommended that the Domain controllers used be no more than 10ms of latency from ANF so ensure existing domain controllers are placed properly
+# The domain join account must have the ability to create machine account (AD domain join) in any OU paths specified
+# The domain join account password should be stored in the deployment key_vault as a secret
 ad:
+  use_existing_ad: false
+  existing_ad_details:
+    domain_name: custom_domain
+    domain_join_user: 
+      username: join_user
+      password_key_vault_name: name_for_the_key_vault_with_the_domain_join_password
+      password_key_vault_resource_group_name: resource_group_name_for_the_key_vault_with_the_domain_join_password
+      password_key_vault_secret_name: key_vault_secret_name_for_the_domain_join_password
+    domain_join_ou: "CN=Computers"
+    domain_controller_names: ["dc1", "dc2"]
+    private_dns_servers: ["192.168.1.53", "192.168.2.53"]
   vm_size: Standard_B2ms
   hybrid_benefit: false # Enable hybrid benefit for AD, default to false
   high_availability: false # Build AD in High Availability mode (2 Domain Controlers) - default to false

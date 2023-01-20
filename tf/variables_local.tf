@@ -56,8 +56,15 @@ locals {
     }
     TEMPLATE
 
-    ad_ha = try(local.configuration_yml["ad"].high_availability, false)
-    domain_controlers = local.ad_ha ? {ad="ad", ad2="ad2"} : {ad="ad"}
+    #Set the domain controller configuration
+    use_existing_ad      = (try(local.configuration_yml["ad"].use_existing_ad, false))
+    domain_name          = local.use_existing_ad ? local.configuration_yml["ad"].domain_name : "hpc.azure"
+    domain_join_user     = local.use_existing_ad ? local.configuration_yml["ad"].domain_join_user.username : local.admin_username 
+    domain_join_password = local.use_existing_ad ? data.azurerm_key_vault_secret.domain_join_password[0].value : azurerm_windows_virtual_machine.ad[0].admin_password 
+    domain_join_ou       = local.use_existing_ad ? local.configuration_yml["ad"].domain_join_ou : "CN=Computers"
+    ad_ha                = try(local.configuration_yml["ad"].high_availability, false)
+    domain_controlers    = local.ad_ha ? {ad="ad", ad2="ad2"} : {ad="ad"}
+    private_dns_servers  = local.use_existing_ad ? local.configuration_yml["ad"].private_dns_servers : (local.ad_ha ? [azurerm_network_interface.ad-nic[0].private_ip_address, azurerm_network_interface.ad2-nic[0].private_ip_address] : [azurerm_network_interface.ad-nic[0].private_ip_address] )
 
     # Use a linux custom image reference if the linux_base_image is defined and contains ":"
     use_linux_image_reference = try(length(split(":", local.configuration_yml["linux_base_image"])[1])>0, false)

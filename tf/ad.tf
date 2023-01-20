@@ -1,4 +1,19 @@
+#if existing AD is used then get the domain join password as a data element
+
+data "azurerm_key_vault" "domain_join_password" {
+  count               = local.use_existing_ad ? 1 : 0
+  name                = try(local.configuration_yml["ad"].domain_join_user.password_key_vault_name, "error")
+  resource_group_name = try(local.configuration_yml["ad"].domain_join_user.password_key_vault_resource_group_name, "error")
+}
+
+data "azurerm_key_vault_secret" "domain_join_password" {
+  count        = local.use_existing_ad ? 1 : 0
+  name         = try(local.configuration_yml["ad"].domain_join_user.password_key_vault_secret_name, "error")
+  key_vault_id = data.azurerm_key_vault.domain_join_password[0].id
+}
+
 resource "azurerm_network_interface" "ad-nic" {
+  count               = local.use_existing_ad ? 0 : 1
   name                = "ad-nic"
   resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
   location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
@@ -11,16 +26,17 @@ resource "azurerm_network_interface" "ad-nic" {
 }
 
 resource "azurerm_windows_virtual_machine" "ad" {
+  count               = local.use_existing_ad ? 0 : 1
   name                = "ad"
   resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
   location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
   size                = try(local.configuration_yml["ad"].vm_size, "Standard_D2s_v3")
-  admin_username      = local.admin_username
-  admin_password      = random_password.password.result
+  admin_username      = local.domain_join_user
+  admin_password      = local.domain_join_password
   license_type        = try(local.configuration_yml["ad"].hybrid_benefit, false) ? "Windows_Server" : "None"
 
   network_interface_ids = [
-    azurerm_network_interface.ad-nic.id,
+    azurerm_network_interface.ad-nic[0].id,
   ]
 
   winrm_listener {
@@ -52,8 +68,8 @@ resource "azurerm_windows_virtual_machine" "ad" {
 }
 
 resource "azurerm_network_interface_application_security_group_association" "ad-asg-asso" {
-  for_each = toset(local.asg_associations["ad"])
-  network_interface_id          = azurerm_network_interface.ad-nic.id
+  for_each                      = local.use_existing_ad ? [] : toset(local.asg_associations["ad"])
+  network_interface_id          = azurerm_network_interface.ad-nic[0].id
   application_security_group_id = local.create_nsg ? azurerm_application_security_group.asg[each.key].id : data.azurerm_application_security_group.asg[each.key].id
 }
 
@@ -78,8 +94,8 @@ resource "azurerm_windows_virtual_machine" "ad2" {
   resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
   location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
   size                = try(local.configuration_yml["ad"].vm_size, "Standard_D2s_v3")
-  admin_username      = local.admin_username
-  admin_password      = random_password.password.result
+  admin_username      = local.domain_join_user
+  admin_password      = local.domain_join_password
   license_type        = try(local.configuration_yml["ad"].hybrid_benefit, false) ? "Windows_Server" : "None"
 
   network_interface_ids = [

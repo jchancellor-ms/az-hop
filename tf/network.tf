@@ -12,6 +12,14 @@ resource "azurerm_virtual_network" "azhop" {
   resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
   address_space       = [try(local.configuration_yml["network"]["vnet"]["address_space"], "10.0.0.0/23")]
 }
+
+#set VNet DNS servers if using the customers AD and hub
+resource "azurerm_virtual_network_dns_servers" "customer_dns" {
+  count              = local.use_existing_ad ? 1 : 0
+  virtual_network_id = azurerm_virtual_network.azhop.id
+  dns_servers        = local.private_dns_servers
+}
+
 # Resource group of the existing vnet
 data "azurerm_resource_group" "rg_vnet" {
   count    = local.create_vnet ? 0 : 1
