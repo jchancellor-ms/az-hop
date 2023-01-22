@@ -85,7 +85,7 @@ resource "azurerm_subnet" "netapp" {
 
 # ad subnet
 data "azurerm_subnet" "ad" {
-  count                = local.create_ad_subnet ? 0 : 1
+  count                = local.create_ad_subnet ? 0 : (local.use_existing_ad ? 0 : 1)
   name                 = try(local.configuration_yml["network"]["vnet"]["subnets"]["ad"]["name"], "ad")
   resource_group_name  = try(split("/", local.vnet_id)[4], "foo")
   virtual_network_name = try(split("/", local.vnet_id)[8], "foo")
@@ -148,9 +148,9 @@ resource "azurerm_subnet" "compute" {
   service_endpoints    = ["Microsoft.Storage"]
 }
 
-# outbounddns subnet
+# outbounddns subnet - if using existing AD then this a resolver won't be created as part of the deployment
 data "azurerm_subnet" "outbounddns" {
-  count                = local.create_outbounddns_subnet ? 0 : (local.no_outbounddns_subnet ? 0 : 1)
+  count                = local.create_outbounddns_subnet ? 0 : (local.use_existing_ad ? 0 : (local.no_outbounddns_subnet ? 0 : 1)) 
   name                 = try(local.configuration_yml["network"]["vnet"]["subnets"]["outbounddns"]["name"], "outbounddns")
   resource_group_name  = try(split("/", local.vnet_id)[4], "foo")
   virtual_network_name = try(split("/", local.vnet_id)[8], "foo")

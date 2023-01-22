@@ -194,7 +194,7 @@ locals {
     create_gateway_subnet  = try(local.gateway_subnet["create"], local.create_vnet )
 
     outbounddns_subnet = try(local.configuration_yml["network"]["vnet"]["subnets"]["outbounddns"], null)
-    no_outbounddns_subnet = try(length(local.outbounddns_subnet) > 0 ? false : true, true )
+    no_outbounddns_subnet = try((length(local.outbounddns_subnet) > 0) ? false : true, true )
     create_outbounddns_subnet  = try(local.outbounddns_subnet["create"], local.create_vnet ? (local.no_outbounddns_subnet ? false : true) : false )
 
     subnets = merge(local._subnets, 
