@@ -171,7 +171,6 @@ locals {
     jumpbox_ssh_port    = try(local.configuration_yml["jumpbox"]["ssh_port"], "22")
     # subnets
     _subnets = {
-        ad = "ad",
         frontend = "frontend",
         admin = "admin",
         netapp = "netapp",
@@ -182,8 +181,12 @@ locals {
     create_frontend_subnet = try(local.configuration_yml["network"]["vnet"]["subnets"]["frontend"]["create"], local.create_vnet )
     create_admin_subnet    = try(local.configuration_yml["network"]["vnet"]["subnets"]["admin"]["create"], local.create_vnet )
     create_netapp_subnet   = try(local.configuration_yml["network"]["vnet"]["subnets"]["netapp"]["create"], local.create_vnet )
-    create_ad_subnet       = try(local.configuration_yml["network"]["vnet"]["subnets"]["ad"]["create"], (local.use_existing_ad? false : local.create_vnet) )
+    #create_ad_subnet       = try(local.configuration_yml["network"]["vnet"]["subnets"]["ad"]["create"], (local.use_existing_ad? false : local.create_vnet) )
     create_compute_subnet  = try(local.configuration_yml["network"]["vnet"]["subnets"]["compute"]["create"], local.create_vnet )
+
+    ad_subnet = try(local.configuration_yml["network"]["vnet"]["subnets"]["ad"], null)
+    no_ad_subnet = try(length(local.ad_subnet) > 0 ? false : true, true )
+    create_ad_subnet  = try(local.ad_subnet["create"], (local.use_existing_ad? false : local.create_vnet))
 
     bastion_subnet = try(local.configuration_yml["network"]["vnet"]["subnets"]["bastion"], null)
     no_bastion_subnet = try(length(local.bastion_subnet) > 0 ? false : true, true )
@@ -198,6 +201,7 @@ locals {
     create_outbounddns_subnet  = try(local.outbounddns_subnet["create"], local.create_vnet ? (local.no_outbounddns_subnet ? false : true) : false )
 
     subnets = merge(local._subnets, 
+                    local.no_ad_subnet ? {} : {ad = "ad"},
                     local.no_bastion_subnet ? {} : {bastion = "AzureBastionSubnet"},
                     local.no_gateway_subnet ? {} : {gateway = "GatewaySubnet"},
                     local.no_outbounddns_subnet ? {} : {outbounddns = "outbounddns"}
