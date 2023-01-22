@@ -14,7 +14,7 @@ resource "local_file" "AnsibleInventory" {
       jumpbox-ssh-port  = local.jumpbox_ssh_port
       ad-ip             = local.use_existing_ad ? "0.0.0.0" : azurerm_network_interface.ad-nic[0].private_ip_address
       ad2-ip            = local.use_existing_ad ? "0.0.0.0" : (local.ad_ha ? azurerm_network_interface.ad2-nic[0].private_ip_address : azurerm_network_interface.ad-nic[0].private_ip_address)
-      ad-passwd         = azurerm_windows_virtual_machine.ad[0].admin_password
+      ad-passwd         = local.domain_join_password
       lustre-oss-count  = local.lustre_oss_count
     }
   )
