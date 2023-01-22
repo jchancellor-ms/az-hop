@@ -69,6 +69,7 @@ network:
       #   name: outbounddns
       #   address_prefixes: "10.0.0.48/28"
       #   create: true
+      # the ad subnet is optional. When intergrating with an existing ad, comment this section out
       ad:
         name: ad
         address_prefixes: "10.0.0.8/29"
