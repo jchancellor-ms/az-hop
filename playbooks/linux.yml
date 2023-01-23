@@ -37,7 +37,7 @@
     setup:
 
   - name: Read Password from KV
-    command: az keyvault secret show --vault-name {{key_vault}} -n {{admin_user}}-password --query "value" -o tsv
+    command: az keyvault secret show --vault-name {{key_vault}} -n {{domain_join_user}}-password --query "value" -o tsv
     delegate_to: localhost
     connection: local
     register: password
@@ -48,7 +48,7 @@
     include_role:
       name: domain_join
     vars:
-      domain_admin: "{{admin_user}}"
+      domain_admin: "{{domain_join_user}}"
       domain_password: "{{password.stdout}}"
       domain: "{{domain_name}}"
       # domain_primary_dns: "{{primary_dns}}"

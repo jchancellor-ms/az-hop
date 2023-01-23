@@ -58,8 +58,8 @@ resource "local_file" "global_variables" {
       jumpbox-ssh-port    = local.jumpbox_ssh_port
       dns-ruleset-name    = local.create_outbounddns_subnet ? azurerm_private_dns_resolver_dns_forwarding_ruleset.forwarding_ruleset[0].name : ""
       domain-name         = local.domain_name
-      domain-join-user    = local.domain_join_user
-      ldap-server         = ""
+      domain_join_user    = local.domain_join_user
+      ldap-server         = local.domain_name
 
     }
   )
