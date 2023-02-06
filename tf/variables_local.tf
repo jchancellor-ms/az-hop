@@ -56,7 +56,7 @@ locals {
     }
     TEMPLATE
 
-    #Set the domain controller configuration
+    #Set the domain controller configuration.  Don't assume that AD is the primary DNS
     use_existing_ad      = (try(local.configuration_yml["ad"].use_existing_ad, false))
     domain_name          = local.use_existing_ad ? local.configuration_yml["ad"].existing_ad_details.domain_name : "hpc.azure"
     domain_join_user     = local.use_existing_ad ? local.configuration_yml["ad"].existing_ad_details.domain_join_user.username : local.admin_username 
@@ -65,6 +65,7 @@ locals {
     ad_ha                = try(local.configuration_yml["ad"].high_availability, false)
     domain_controlers    = local.ad_ha ? {ad="ad", ad2="ad2"} : {ad="ad"}
     private_dns_servers  = local.use_existing_ad ? local.configuration_yml["ad"].existing_ad_details.private_dns_servers : (local.ad_ha ? [azurerm_network_interface.ad-nic[0].private_ip_address, azurerm_network_interface.ad2-nic[0].private_ip_address] : [azurerm_network_interface.ad-nic[0].private_ip_address] )
+    domain_controller_ips = local.use_existing_ad ? local.configuration_yml["ad"].existing_ad_details.domain_controller_ip_addresses : (local.ad_ha ? [azurerm_network_interface.ad-nic[0].private_ip_address, azurerm_network_interface.ad2-nic[0].private_ip_address] : [azurerm_network_interface.ad-nic[0].private_ip_address] )
 
     # Use a linux custom image reference if the linux_base_image is defined and contains ":"
     use_linux_image_reference = try(length(split(":", local.configuration_yml["linux_base_image"])[1])>0, false)
@@ -286,6 +287,10 @@ locals {
         WinRM = ["5985", "5986"]
     }
 
+    #Replace the AD ASG with domain controller IP addresses when customer is bringing their own AD
+    ad_nsg_text = local.use_existing_ad ? local.domain_controller_ips : "asg/asg-ad"
+
+
     # Array of NSG rules to be applied on the common NSG
     # NsgRuleName = [priority, direction, access, protocol, destination_port_range, source, destination]
     #   - priority               : integer value from 100 to 4096
@@ -306,16 +311,16 @@ locals {
         #                          ###    #    #  #####    ####    ####   #    #  #####
         # ================================================================================================================================================================
         # AD communication
-        AllowAdServerTcpIn          = ["220", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad",        "asg/asg-ad-client"],
-        AllowAdServerUdpIn          = ["230", "Inbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad",        "asg/asg-ad-client"],
-        AllowAdClientTcpIn          = ["240", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad-client", "asg/asg-ad"],
-        AllowAdClientUdpIn          = ["250", "Inbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad-client", "asg/asg-ad"],
-        AllowAdServerComputeTcpIn   = ["260", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad",        "subnet/compute"],
-        AllowAdServerComputeUdpIn   = ["270", "Inbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad",        "subnet/compute"],
-        AllowAdClientComputeTcpIn   = ["280", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "subnet/compute",    "asg/asg-ad"],
-        AllowAdClientComputeUdpIn   = ["290", "Inbound", "Allow", "Udp", "DomainControlerUdp", "subnet/compute",    "asg/asg-ad"],
-        AllowAdServerNetappTcpIn    = ["300", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "subnet/netapp",      "asg/asg-ad"],
-        AllowAdServerNetappUdpIn    = ["310", "Inbound", "Allow", "Udp", "DomainControlerUdp", "subnet/netapp",      "asg/asg-ad"],
+        AllowAdServerTcpIn          = ["220", "Inbound", "Allow", "Tcp", "DomainControlerTcp", local.ad_nsg_text,        "asg/asg-ad-client"],
+        AllowAdServerUdpIn          = ["230", "Inbound", "Allow", "Udp", "DomainControlerUdp", local.ad_nsg_text,        "asg/asg-ad-client"],
+        AllowAdClientTcpIn          = ["240", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad-client", local.ad_nsg_text],
+        AllowAdClientUdpIn          = ["250", "Inbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad-client", local.ad_nsg_text],
+        AllowAdServerComputeTcpIn   = ["260", "Inbound", "Allow", "Tcp", "DomainControlerTcp", local.ad_nsg_text,        "subnet/compute"],
+        AllowAdServerComputeUdpIn   = ["270", "Inbound", "Allow", "Udp", "DomainControlerUdp", local.ad_nsg_text,        "subnet/compute"],
+        AllowAdClientComputeTcpIn   = ["280", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "subnet/compute",    local.ad_nsg_text],
+        AllowAdClientComputeUdpIn   = ["290", "Inbound", "Allow", "Udp", "DomainControlerUdp", "subnet/compute",    local.ad_nsg_text],
+        AllowAdServerNetappTcpIn    = ["300", "Inbound", "Allow", "Tcp", "DomainControlerTcp", "subnet/netapp",      local.ad_nsg_text],
+        AllowAdServerNetappUdpIn    = ["310", "Inbound", "Allow", "Udp", "DomainControlerUdp", "subnet/netapp",      local.ad_nsg_text],
 
         # SSH internal rules
         AllowSshFromJumpboxIn       = ["320", "Inbound", "Allow", "Tcp", "Ssh",                "asg/asg-jumpbox",   "asg/asg-ssh"],
@@ -381,16 +386,16 @@ locals {
         #                            #######   ####      #    #####    ####    ####   #    #  #####
         # ================================================================================================================================================================
         # AD communication
-        AllowAdClientTcpOut         = ["200", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad-client", "asg/asg-ad"],
-        AllowAdClientUdpOut         = ["210", "Outbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad-client", "asg/asg-ad"],
-        AllowAdClientComputeTcpOut  = ["220", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "subnet/compute",    "asg/asg-ad"],
-        AllowAdClientComputeUdpOut  = ["230", "Outbound", "Allow", "Udp", "DomainControlerUdp", "subnet/compute",    "asg/asg-ad"],
-        AllowAdServerTcpOut         = ["240", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad",        "asg/asg-ad-client"],
-        AllowAdServerUdpOut         = ["250", "Outbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad",        "asg/asg-ad-client"],
-        AllowAdServerComputeTcpOut  = ["260", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad",        "subnet/compute"],
-        AllowAdServerComputeUdpOut  = ["270", "Outbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad",        "subnet/compute"],
-        AllowAdServerNetappTcpOut   = ["280", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad",        "subnet/netapp"],
-        AllowAdServerNetappUdpOut   = ["290", "Outbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad",        "subnet/netapp"],
+        AllowAdClientTcpOut         = ["200", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "asg/asg-ad-client", local.ad_nsg_text],
+        AllowAdClientUdpOut         = ["210", "Outbound", "Allow", "Udp", "DomainControlerUdp", "asg/asg-ad-client", local.ad_nsg_text],
+        AllowAdClientComputeTcpOut  = ["220", "Outbound", "Allow", "Tcp", "DomainControlerTcp", "subnet/compute",    local.ad_nsg_text],
+        AllowAdClientComputeUdpOut  = ["230", "Outbound", "Allow", "Udp", "DomainControlerUdp", "subnet/compute",    local.ad_nsg_text],
+        AllowAdServerTcpOut         = ["240", "Outbound", "Allow", "Tcp", "DomainControlerTcp", local.ad_nsg_text,        "asg/asg-ad-client"],
+        AllowAdServerUdpOut         = ["250", "Outbound", "Allow", "Udp", "DomainControlerUdp", local.ad_nsg_text,        "asg/asg-ad-client"],
+        AllowAdServerComputeTcpOut  = ["260", "Outbound", "Allow", "Tcp", "DomainControlerTcp", local.ad_nsg_text,        "subnet/compute"],
+        AllowAdServerComputeUdpOut  = ["270", "Outbound", "Allow", "Udp", "DomainControlerUdp", local.ad_nsg_text,        "subnet/compute"],
+        AllowAdServerNetappTcpOut   = ["280", "Outbound", "Allow", "Tcp", "DomainControlerTcp", local.ad_nsg_text,        "subnet/netapp"],
+        AllowAdServerNetappUdpOut   = ["290", "Outbound", "Allow", "Udp", "DomainControlerUdp", local.ad_nsg_text,        "subnet/netapp"],
 
         # CycleCloud
         AllowCycleServerOut         = ["300", "Outbound", "Allow", "Tcp", "CycleCloud",         "asg/asg-cyclecloud",        "asg/asg-cyclecloud-client"],
