@@ -131,7 +131,7 @@ resource "azurerm_windows_virtual_machine" "ad2" {
 }
 
 resource "azurerm_network_interface_application_security_group_association" "ad2-asg-asso" {
-  for_each = local.ad_ha ? toset(local.asg_associations["ad"]) : []
+  for_each                      = local.ad_ha ? toset(local.asg_associations["ad"]) : []
   network_interface_id          = azurerm_network_interface.ad2-nic[0].id
   application_security_group_id = local.create_nsg ? azurerm_application_security_group.asg[each.key].id : data.azurerm_application_security_group.asg[each.key].id
 }

@@ -17,15 +17,15 @@ resource "azurerm_network_interface" "lustre-nic" {
 }
 
 resource "azurerm_linux_virtual_machine" "lustre" {
-  count                 = local.lustre_enabled ? 1 : 0
-  name                  = "lustre"
-  location              = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
-  resource_group_name   = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
-  size                  = local.lustre_mds_sku
+  count               = local.lustre_enabled ? 1 : 0
+  name                = "lustre"
+  location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
+  resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
+  size                = local.lustre_mds_sku
   network_interface_ids = [
     azurerm_network_interface.lustre-nic[0].id,
   ]
-  
+
   admin_username = local.admin_username
   admin_ssh_key {
     username   = local.admin_username
@@ -51,11 +51,11 @@ resource "azurerm_linux_virtual_machine" "lustre" {
   source_image_id = local.lustre_image_id
 
   dynamic "plan" {
-    for_each = try (length(local.lustre_image_plan.name) > 0, false) ? [1] : []
+    for_each = try(length(local.lustre_image_plan.name) > 0, false) ? [1] : []
     content {
-        name      = local.lustre_image_plan.name
-        publisher = local.lustre_image_plan.publisher
-        product   = local.lustre_image_plan.product
+      name      = local.lustre_image_plan.name
+      publisher = local.lustre_image_plan.publisher
+      product   = local.lustre_image_plan.product
     }
   }
 
@@ -85,11 +85,11 @@ resource "azurerm_user_assigned_identity" "lustre-oss" {
 }
 
 resource "azurerm_network_interface" "lustre-oss-nic" {
-  count                          = local.lustre_oss_count
-  name                           = "lustre-oss-nic-${count.index}"
-  location                       = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
-  resource_group_name            = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
-  enable_accelerated_networking  = true
+  count                         = local.lustre_oss_count
+  name                          = "lustre-oss-nic-${count.index}"
+  location                      = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
+  resource_group_name           = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
+  enable_accelerated_networking = true
 
   ip_configuration {
     name                          = "internal"
@@ -99,11 +99,11 @@ resource "azurerm_network_interface" "lustre-oss-nic" {
 }
 
 resource "azurerm_linux_virtual_machine" "lustre-oss" {
-  count                 = local.lustre_oss_count
-  name                  = "lustre-oss-${count.index}"
-  location              = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
-  resource_group_name   = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
-  size                  = local.lustre_oss_sku
+  count               = local.lustre_oss_count
+  name                = "lustre-oss-${count.index}"
+  location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
+  resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
+  size                = local.lustre_oss_sku
   network_interface_ids = [
     element(azurerm_network_interface.lustre-oss-nic.*.id, count.index)
   ]
@@ -133,17 +133,17 @@ resource "azurerm_linux_virtual_machine" "lustre-oss" {
   source_image_id = local.lustre_image_id
 
   dynamic "plan" {
-    for_each = try (length(local.lustre_image_plan.name) > 0, false) ? [1] : []
+    for_each = try(length(local.lustre_image_plan.name) > 0, false) ? [1] : []
     content {
-        name      = local.lustre_image_plan.name
-        publisher = local.lustre_image_plan.publisher
-        product   = local.lustre_image_plan.product
+      name      = local.lustre_image_plan.name
+      publisher = local.lustre_image_plan.publisher
+      product   = local.lustre_image_plan.product
     }
   }
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [ azurerm_user_assigned_identity.lustre-oss[0].id ]
+    identity_ids = [azurerm_user_assigned_identity.lustre-oss[0].id]
   }
 
   lifecycle {
@@ -155,13 +155,13 @@ resource "azurerm_linux_virtual_machine" "lustre-oss" {
 
 # Grant read access to the Keyvault for the lustre-oss identity
 resource "azurerm_key_vault_access_policy" "lustre-oss" {
-  count               = local.lustre_enabled ? 1 : 0
-  key_vault_id        = azurerm_key_vault.azhop.id
-  tenant_id           = local.tenant_id
-  object_id           = azurerm_user_assigned_identity.lustre-oss[0].principal_id
+  count        = local.lustre_enabled ? 1 : 0
+  key_vault_id = azurerm_key_vault.azhop.id
+  tenant_id    = local.tenant_id
+  object_id    = azurerm_user_assigned_identity.lustre-oss[0].principal_id
 
-  key_permissions     = [ "Get", "List" ]
-  secret_permissions  = [ "Get", "List" ]
+  key_permissions    = ["Get", "List"]
+  secret_permissions = ["Get", "List"]
 }
 
 # Problem : How to generate associations for all OSS instances as we can't mix count and for_each ???
@@ -181,7 +181,7 @@ locals {
 
 resource "azurerm_network_interface_application_security_group_association" "lustre-oss-asg-asso" {
   # We need a map to use for_each, so we convert our list into a map by adding a unique key:
-  for_each = { for entry in local.lustre_oss_asgs: "${entry.oss}.${entry.asg}" => entry }
+  for_each                      = { for entry in local.lustre_oss_asgs : "${entry.oss}.${entry.asg}" => entry }
   network_interface_id          = azurerm_network_interface.lustre-oss-nic[each.value.oss].id
   application_security_group_id = local.create_nsg ? azurerm_application_security_group.asg[each.value.asg].id : data.azurerm_application_security_group.asg[each.value.asg].id
 }
@@ -205,11 +205,11 @@ resource "azurerm_network_interface" "robinhood-nic" {
 }
 
 resource "azurerm_linux_virtual_machine" "robinhood" {
-  count                 = local.lustre_enabled ? 1 : 0
-  name                  = "robinhood"
-  location              = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
-  resource_group_name   = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
-  size                  = local.lustre_rbh_sku
+  count               = local.lustre_enabled ? 1 : 0
+  name                = "robinhood"
+  location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
+  resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
+  size                = local.lustre_rbh_sku
   network_interface_ids = [
     azurerm_network_interface.robinhood-nic[0].id,
   ]
@@ -239,17 +239,17 @@ resource "azurerm_linux_virtual_machine" "robinhood" {
   source_image_id = local.lustre_image_id
 
   dynamic "plan" {
-    for_each = try (length(local.lustre_image_plan.name) > 0, false) ? [1] : []
+    for_each = try(length(local.lustre_image_plan.name) > 0, false) ? [1] : []
     content {
-        name      = local.lustre_image_plan.name
-        publisher = local.lustre_image_plan.publisher
-        product   = local.lustre_image_plan.product
+      name      = local.lustre_image_plan.name
+      publisher = local.lustre_image_plan.publisher
+      product   = local.lustre_image_plan.product
     }
   }
-  
+
   identity {
     type         = "UserAssigned"
-    identity_ids = [ azurerm_user_assigned_identity.lustre-oss[0].id ]
+    identity_ids = [azurerm_user_assigned_identity.lustre-oss[0].id]
   }
 
   lifecycle {

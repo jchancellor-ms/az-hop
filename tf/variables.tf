@@ -1,27 +1,27 @@
-variable AzureEnvironment {
+variable "AzureEnvironment" {
   default = "AZUREPUBLICCLOUD"
 }
 
-variable KeyVaultSuffix {
+variable "KeyVaultSuffix" {
   default = "vault.azure.net"
 }
 
-variable BlobStorageSuffix {
+variable "BlobStorageSuffix" {
   default = "blob.core.windows.net"
 }
 
-variable CreatedBy {
+variable "CreatedBy" {
   default = ""
 }
 
-variable tenant_id {
-  type = string
+variable "tenant_id" {
+  type        = string
   description = "The azure tenant id the user is logged in"
-  default = ""
+  default     = ""
 }
 
-variable logged_user_objectId {
-  type = string
+variable "logged_user_objectId" {
+  type        = string
   description = "The azure user logged object id"
-  default = ""
+  default     = ""
 }

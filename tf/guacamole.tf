@@ -45,17 +45,17 @@ resource "azurerm_linux_virtual_machine" "guacamole" {
   source_image_id = local.linux_image_id
 
   dynamic "plan" {
-    for_each = try (length(local.linux_image_plan.name) > 0, false) ? [1] : []
+    for_each = try(length(local.linux_image_plan.name) > 0, false) ? [1] : []
     content {
-        name      = local.linux_image_plan.name
-        publisher = local.linux_image_plan.publisher
-        product   = local.linux_image_plan.product
+      name      = local.linux_image_plan.name
+      publisher = local.linux_image_plan.publisher
+      product   = local.linux_image_plan.product
     }
   }
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [ azurerm_user_assigned_identity.guacamole[0].id ]
+    identity_ids = [azurerm_user_assigned_identity.guacamole[0].id]
   }
   lifecycle {
     ignore_changes = [
@@ -73,17 +73,17 @@ resource "azurerm_user_assigned_identity" "guacamole" {
 }
 # Grant read access to the Keyvault for the guacamole identity
 resource "azurerm_key_vault_access_policy" "guacamole" {
-  count               = local.enable_remote_winviz ? 1 : 0
+  count        = local.enable_remote_winviz ? 1 : 0
   key_vault_id = azurerm_key_vault.azhop.id
   tenant_id    = local.tenant_id
   object_id    = azurerm_user_assigned_identity.guacamole[0].principal_id
 
-  key_permissions = [ "Get", "List" ]
-  secret_permissions = [ "Get", "List" ]
+  key_permissions    = ["Get", "List"]
+  secret_permissions = ["Get", "List"]
 }
 
 resource "azurerm_network_interface_application_security_group_association" "guacamole-asg-asso" {
-  for_each = local.enable_remote_winviz ? toset(local.asg_associations["guacamole"]) : []
+  for_each                      = local.enable_remote_winviz ? toset(local.asg_associations["guacamole"]) : []
   network_interface_id          = azurerm_network_interface.guacamole-nic[0].id
   application_security_group_id = local.create_nsg ? azurerm_application_security_group.asg[each.key].id : data.azurerm_application_security_group.asg[each.key].id
 }

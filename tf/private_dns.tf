@@ -6,7 +6,7 @@ resource "azurerm_private_dns_zone" "azhop_private_dns" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "azhop_dns_link" {
-  count               = local.use_existing_ad ? 0 : 1
+  count                 = local.use_existing_ad ? 0 : 1
   name                  = "az-hop"
   resource_group_name   = azurerm_private_dns_zone.azhop_private_dns[0].resource_group_name
   private_dns_zone_name = azurerm_private_dns_zone.azhop_private_dns[0].name
@@ -25,7 +25,7 @@ resource "azurerm_private_dns_a_record" "ad" {
 }
 
 resource "azurerm_private_dns_a_record" "ad2" {
-  count               = local.use_existing_ad ? 0 : (local.ad_ha ? 1 : 0 )
+  count               = local.use_existing_ad ? 0 : (local.ad_ha ? 1 : 0)
   name                = "ad2"
   resource_group_name = azurerm_private_dns_zone.azhop_private_dns[0].resource_group_name
   zone_name           = azurerm_private_dns_zone.azhop_private_dns[0].name
@@ -44,10 +44,10 @@ resource "azurerm_private_dns_srv_record" "ldap_tcp" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 389
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 389
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -60,10 +60,10 @@ resource "azurerm_private_dns_srv_record" "kpasswd_tcp" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 464
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 464
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -76,10 +76,10 @@ resource "azurerm_private_dns_srv_record" "kerberos_tcp" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 88
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 88
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -92,10 +92,10 @@ resource "azurerm_private_dns_srv_record" "gc_tcp" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 3268
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 3268
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -108,10 +108,10 @@ resource "azurerm_private_dns_srv_record" "kerberos_udp" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 88
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 88
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -124,10 +124,10 @@ resource "azurerm_private_dns_srv_record" "kpasswd_udp" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 464
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 464
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -142,10 +142,10 @@ resource "azurerm_private_dns_srv_record" "ldap_tcpdc_msdcs" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 389
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 389
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -158,10 +158,10 @@ resource "azurerm_private_dns_srv_record" "kerberos_tcpdc_msdcs" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 88
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 88
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -174,10 +174,10 @@ resource "azurerm_private_dns_srv_record" "ldap_tcp_gc_msdcs" {
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 3268
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 3268
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -203,10 +203,10 @@ resource "azurerm_private_dns_srv_record" "ldapdefault-first-site-name_sitesdc_m
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 389
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 389
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -219,10 +219,10 @@ resource "azurerm_private_dns_srv_record" "kerberosdefault-first-site-name_sites
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 88
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 88
+      target   = "${record.value}.hpc.azure."
     }
   }
 }
@@ -235,10 +235,10 @@ resource "azurerm_private_dns_srv_record" "ldapdefault-first-site-name_sitesgc_m
   dynamic "record" {
     for_each = local.domain_controlers
     content {
-    priority = 0
-    weight   = 100
-    port     = 3268
-    target   = "${record.value}.hpc.azure."
+      priority = 0
+      weight   = 100
+      port     = 3268
+      target   = "${record.value}.hpc.azure."
     }
   }
 }

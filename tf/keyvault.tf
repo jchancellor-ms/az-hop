@@ -1,5 +1,5 @@
 resource "time_sleep" "delay_create" {
-  depends_on   = [azurerm_key_vault_access_policy.admin] # As policies are created in the same deployment add some delays to propagate
+  depends_on      = [azurerm_key_vault_access_policy.admin] # As policies are created in the same deployment add some delays to propagate
   create_duration = "20s"
 }
 
@@ -12,8 +12,8 @@ resource "azurerm_key_vault" "azhop" {
   tenant_id                   = local.tenant_id
   # soft delete is enabled by default now (2021-8-25), with 90 days retention
   # soft_delete_enabled         = true
-  soft_delete_retention_days  = 7
-  purge_protection_enabled    = false
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = false
   # TODO => Add the option to enable VMs to keep secrets in KV
   sku_name = "standard"
 
@@ -31,27 +31,27 @@ resource "azurerm_key_vault_access_policy" "admin" {
   object_id    = local.logged_user_objectId
 
   secret_permissions = [
-      "Get",
-      "Set",
-      "List",
-      "Delete",
-      "Purge",
-      "Recover",
-      "Restore"
-    ]
+    "Get",
+    "Set",
+    "List",
+    "Delete",
+    "Purge",
+    "Recover",
+    "Restore"
+  ]
 }
 
 # Only create the reader access policy when the key_vault_reader is set
 resource "azurerm_key_vault_access_policy" "reader" {
-  count = local.key_vault_readers != null ? 1 : 0
+  count        = local.key_vault_readers != null ? 1 : 0
   key_vault_id = azurerm_key_vault.azhop.id
   tenant_id    = local.tenant_id
   object_id    = local.key_vault_readers != null ? local.key_vault_readers : local.logged_user_objectId
 
   secret_permissions = [
-      "Get",
-      "List"
-    ]
+    "Get",
+    "List"
+  ]
 }
 
 resource "azurerm_key_vault_secret" "admin_password" {
@@ -95,7 +95,7 @@ resource "azurerm_key_vault_secret" "admin_ssh_private" {
 }
 
 resource "azurerm_key_vault_secret" "admin_ssh_public" {
-  depends_on   = [time_sleep.delay_create, azurerm_key_vault_access_policy.admin] 
+  depends_on   = [time_sleep.delay_create, azurerm_key_vault_access_policy.admin]
   name         = format("%s-public", local.admin_username)
   value        = tls_private_key.internal.public_key_openssh
   key_vault_id = azurerm_key_vault.azhop.id

@@ -54,11 +54,11 @@ resource "azurerm_linux_virtual_machine" "jumpbox" {
 
   source_image_id = local.linux_image_id
   dynamic "plan" {
-    for_each = try (length(local.linux_image_plan.name) > 0, false) ? [1] : []
+    for_each = try(length(local.linux_image_plan.name) > 0, false) ? [1] : []
     content {
-        name      = local.linux_image_plan.name
-        publisher = local.linux_image_plan.publisher
-        product   = local.linux_image_plan.product
+      name      = local.linux_image_plan.name
+      publisher = local.linux_image_plan.publisher
+      product   = local.linux_image_plan.product
     }
   }
 
@@ -70,7 +70,7 @@ resource "azurerm_linux_virtual_machine" "jumpbox" {
 }
 
 resource "azurerm_network_interface_application_security_group_association" "jumpbox-asg-asso" {
-  for_each = local.jumpbox_enabled ? toset(local.asg_associations["jumpbox"]) : []
+  for_each                      = local.jumpbox_enabled ? toset(local.asg_associations["jumpbox"]) : []
   network_interface_id          = azurerm_network_interface.jumpbox-nic[0].id
   application_security_group_id = local.create_nsg ? azurerm_application_security_group.asg[each.key].id : data.azurerm_application_security_group.asg[each.key].id
 }

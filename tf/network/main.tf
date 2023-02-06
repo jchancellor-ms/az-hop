@@ -20,8 +20,8 @@ provider "azurerm" {
 data "azurerm_subscription" "primary" {}
 
 data "azurerm_resource_group" "rg" {
-  count    = local.create_rg ? 0 : 1
-  name     = local.resource_group
+  count = local.create_rg ? 0 : 1
+  name  = local.resource_group
 }
 
 
@@ -30,12 +30,12 @@ resource "azurerm_resource_group" "rg" {
   name     = local.resource_group
   location = local.location
 
-  tags = merge( local.common_tags, local.extra_tags)
+  tags = merge(local.common_tags, local.extra_tags)
 
   lifecycle {
     ignore_changes = [
       tags
     ]
-  }  
+  }
 }
 

@@ -1,8 +1,8 @@
 # Main VNET
 data "azurerm_virtual_network" "azhop" {
-  count                = local.create_vnet ? 0 : 1
-  name                 = try(split("/", local.vnet_id)[8], "foo")
-  resource_group_name  = try(split("/", local.vnet_id)[4], "foo")
+  count               = local.create_vnet ? 0 : 1
+  name                = try(split("/", local.vnet_id)[8], "foo")
+  resource_group_name = try(split("/", local.vnet_id)[4], "foo")
 }
 
 resource "azurerm_virtual_network" "azhop" {
@@ -22,8 +22,8 @@ resource "azurerm_virtual_network_dns_servers" "customer_dns" {
 
 # Resource group of the existing vnet
 data "azurerm_resource_group" "rg_vnet" {
-  count    = local.create_vnet ? 0 : 1
-  name     = try(split("/", local.vnet_id)[4], "foo")
+  count = local.create_vnet ? 0 : 1
+  name  = try(split("/", local.vnet_id)[4], "foo")
 }
 
 # Frontend Subnet
@@ -150,7 +150,7 @@ resource "azurerm_subnet" "compute" {
 
 # outbounddns subnet - if using existing AD then this a resolver won't be created as part of the deployment
 data "azurerm_subnet" "outbounddns" {
-  count                = local.create_outbounddns_subnet ? 0 : (local.use_existing_ad ? 0 : (local.no_outbounddns_subnet ? 0 : 1)) 
+  count                = local.create_outbounddns_subnet ? 0 : (local.use_existing_ad ? 0 : (local.no_outbounddns_subnet ? 0 : 1))
   name                 = try(local.configuration_yml["network"]["vnet"]["subnets"]["outbounddns"]["name"], "outbounddns")
   resource_group_name  = try(split("/", local.vnet_id)[4], "foo")
   virtual_network_name = try(split("/", local.vnet_id)[8], "foo")

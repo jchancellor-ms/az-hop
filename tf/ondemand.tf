@@ -8,9 +8,9 @@ resource "azurerm_public_ip" "ondemand-pip" {
 }
 
 resource "azurerm_network_interface" "ondemand-nic" {
-  name                = "ondemand-nic"
-  location            = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
-  resource_group_name = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
+  name                          = "ondemand-nic"
+  location                      = local.create_rg ? azurerm_resource_group.rg[0].location : data.azurerm_resource_group.rg[0].location
+  resource_group_name           = local.create_rg ? azurerm_resource_group.rg[0].name : data.azurerm_resource_group.rg[0].name
   enable_accelerated_networking = true
 
   ip_configuration {
@@ -53,11 +53,11 @@ resource "azurerm_linux_virtual_machine" "ondemand" {
 
   source_image_id = local.linux_image_id
   dynamic "plan" {
-    for_each = try (length(local.linux_image_plan.name) > 0, false) ? [1] : []
+    for_each = try(length(local.linux_image_plan.name) > 0, false) ? [1] : []
     content {
-        name      = local.linux_image_plan.name
-        publisher = local.linux_image_plan.publisher
-        product   = local.linux_image_plan.product
+      name      = local.linux_image_plan.name
+      publisher = local.linux_image_plan.publisher
+      product   = local.linux_image_plan.product
     }
   }
 
@@ -69,7 +69,7 @@ resource "azurerm_linux_virtual_machine" "ondemand" {
 }
 
 resource "azurerm_network_interface_application_security_group_association" "ondemand-asg-asso" {
-  for_each = toset(local.asg_associations["ondemand"])
+  for_each                      = toset(local.asg_associations["ondemand"])
   network_interface_id          = azurerm_network_interface.ondemand-nic.id
   application_security_group_id = local.create_nsg ? azurerm_application_security_group.asg[each.key].id : data.azurerm_application_security_group.asg[each.key].id
 }
