@@ -18,6 +18,11 @@ resource "azurerm_network_interface" "jumpbox-nic" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = local.allow_public_ip ? azurerm_public_ip.jumpbox-pip[0].id : null
   }
+
+  depends_on = [
+    azurerm_subnet.frontend,
+    data.azurerm_subnet.frontend
+  ]
 }
 
 resource "azurerm_linux_virtual_machine" "jumpbox" {

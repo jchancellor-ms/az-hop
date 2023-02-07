@@ -8,6 +8,11 @@ resource "azurerm_network_interface" "grafana-nic" {
     subnet_id                     = local.create_admin_subnet ? azurerm_subnet.admin[0].id : data.azurerm_subnet.admin[0].id
     private_ip_address_allocation = "Dynamic"
   }
+
+  depends_on = [
+    azurerm_subnet.admin,
+    data.azurerm_subnet.admin
+  ]
 }
 
 resource "azurerm_linux_virtual_machine" "grafana" {

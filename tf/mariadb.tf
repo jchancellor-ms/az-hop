@@ -50,6 +50,11 @@ resource "azurerm_private_endpoint" "mariadb" {
     is_manual_connection           = false
     subresource_names              = ["mariadbServer"]
   }
+
+  depends_on = [
+    azurerm_subnet.admin,
+    data.azurerm_subnet.admin
+  ]
 }
 
 resource "random_password" "mariadb_password" {

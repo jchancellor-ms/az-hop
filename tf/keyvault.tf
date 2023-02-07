@@ -23,6 +23,11 @@ resource "azurerm_key_vault" "azhop" {
     ip_rules                   = local.grant_access_from
     virtual_network_subnet_ids = [local.create_admin_subnet ? azurerm_subnet.admin[0].id : data.azurerm_subnet.admin[0].id]
   }
+
+  depends_on = [
+    azurerm_subnet.admin,
+    data.azurerm_subnet.admin
+  ]
 }
 
 resource "azurerm_key_vault_access_policy" "admin" {
