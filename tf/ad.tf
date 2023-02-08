@@ -23,6 +23,11 @@ resource "azurerm_network_interface" "ad-nic" {
     subnet_id                     = local.create_ad_subnet ? azurerm_subnet.ad[0].id : data.azurerm_subnet.ad[0].id
     private_ip_address_allocation = "Dynamic"
   }
+
+  depends_on = [
+    azurerm_subnet.ad,
+    data.azurerm_subnet.ad
+  ]
 }
 
 resource "azurerm_windows_virtual_machine" "ad" {
@@ -86,6 +91,11 @@ resource "azurerm_network_interface" "ad2-nic" {
     subnet_id                     = local.create_ad_subnet ? azurerm_subnet.ad[0].id : data.azurerm_subnet.ad[0].id
     private_ip_address_allocation = "Dynamic"
   }
+
+  depends_on = [
+    azurerm_subnet.ad,
+    data.azurerm_subnet.ad
+  ]
 }
 
 resource "azurerm_windows_virtual_machine" "ad2" {

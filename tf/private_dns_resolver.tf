@@ -12,6 +12,11 @@ resource "azurerm_private_dns_resolver_outbound_endpoint" "resolver_outbound_end
   private_dns_resolver_id = azurerm_private_dns_resolver.dns_resolver[0].id
   location                = azurerm_private_dns_resolver.dns_resolver[0].location
   subnet_id               = local.create_outbounddns_subnet ? azurerm_subnet.outbounddns[0].id : data.azurerm_subnet.outbounddns[0].id
+
+  depends_on = [
+    azurerm_subnet.outbounddns,
+    data.azurerm_subnet.outbounddns
+  ]
 }
 
 resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" "forwarding_ruleset" {
